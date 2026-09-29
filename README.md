@@ -31,7 +31,7 @@ issue-tracker/
 │   ├── utils/               # JWT helper utils
 │   ├── app.js               # Express application initialization
 │   ├── server.js            # Server entrypoint
-│   └── .env.example
+│   └── .env
 └── frontend/
     ├── public/
     ├── src/
@@ -44,7 +44,7 @@ issue-tracker/
     │   ├── App.jsx          # Router & Route declarations
     │   └── main.jsx
     ├── vercel.json          # Vercel deployment rewrite rules
-    └── .env.example
+    └── .env
 ```
 
 ---
