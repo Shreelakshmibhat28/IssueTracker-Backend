@@ -15,33 +15,59 @@ const app = express();
 // Security headers
 app.use(helmet());
 
-// CORS — allow only the configured client origin
-app.use(cors({
-  origin: process.env.CLIENT_URL,
-  credentials: true,
-}));
+// CORS
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL || '*',
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  })
+);
+
+// Handle preflight requests
+app.options('*', cors());
 
 // JSON body parser
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Rate limiter for auth routes only (avoid brute-force)
+// Rate limiter for auth routes
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 15 * 60 * 1000,
   max: 20,
-  message: { message: 'Too many requests, please try again later.' },
+  message: {
+    message: 'Too many requests, please try again later.',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 
 // Health check
-app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
+app.get('/api/health', (_req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    message: 'API is running',
+  });
+});
 
 // Routes
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/issues', issueRoutes);
-app.use('/api/issues', commentRoutes); // nested: /api/issues/:id/comments
+app.use('/api/issues', commentRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 
-// Central error handler (must be last)
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({
+    message: 'Route not found',
+    method: req.method,
+    path: req.originalUrl,
+  });
+});
+
+// Central error handler
 app.use(errorHandler);
 
 module.exports = app;
